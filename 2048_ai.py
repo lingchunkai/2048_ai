@@ -20,7 +20,7 @@ def Play(ai):
         possible_moves = game.get_possible_moves()
         if len(possible_moves) == 0: break
         move = ai.get_move(game)
-        assert(move in possible_moves, 'invalid move')
+        assert move in possible_moves, 'invalid move'
         print move
         game.move(move)
     print 'Game over'
