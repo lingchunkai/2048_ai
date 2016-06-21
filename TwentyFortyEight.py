@@ -21,6 +21,7 @@ OFFSETS = {UP: (1, 0),
 def merge(line):
     # Helper function that merges a single row or column in 2048
     # Move all non-zero values of list to the left
+    # @return: (result after merging, increase in score)
     nonzeros_removed = []
     result = []
     merged = False
@@ -30,12 +31,14 @@ def merge(line):
 
     while len(nonzeros_removed) != len(line):
         nonzeros_removed.append(0)
-        
+    
+    score_inc = 0
     # Double sequental tiles if same value
     for number in range(0, len(nonzeros_removed) - 1):
         if nonzeros_removed[number] == nonzeros_removed[number + 1] and merged == False:
             result.append(nonzeros_removed[number] * 2)
             merged = True
+            score_inc += nonzeros_removed[number] * 2
         elif nonzeros_removed[number] != nonzeros_removed[number + 1] and merged == False:
             result.append(nonzeros_removed[number])
         elif merged == True:
@@ -47,7 +50,7 @@ def merge(line):
     while len(result) != len(nonzeros_removed):
         result.append(0)
 
-    return result
+    return result, score_inc
 
 class TwentyFortyEight:
     # Class to run the game logic.
@@ -83,6 +86,7 @@ class TwentyFortyEight:
     def get_grid_width(self):
         # Get the width of the board.
         return self.grid_width
+    
     def get_alive(self):
         # Brute force method to check if any move is available
         nfilled = sum([sum([1 if x > 0 else 0 for x in y]) for y in self.cells])
@@ -104,41 +108,44 @@ class TwentyFortyEight:
         g = copy.deepcopy(self)
 
         if(direction == UP):
-            return not g.next_pos(direction, self.get_grid_height())
+            return not g.next_pos(direction, self.get_grid_height()) == None
         elif(direction == DOWN):
-            return not g.next_pos(direction, self.get_grid_height())
+            return not g.next_pos(direction, self.get_grid_height()) == None
         elif(direction == LEFT):
-            return not g.next_pos(direction, self.get_grid_width())
+            return not g.next_pos(direction, self.get_grid_width()) == None
         elif(direction == RIGHT):
-            return not g.next_pos(direction, self.get_grid_width())
+            return not g.next_pos(direction, self.get_grid_width()) == None
      
     def move(self, direction):
         # Move all tiles in the given direction and add
         # a new tile if any tiles moved.
         # print direction
+        # @return None if invalid move, otherwise score change
         if(direction == UP):
-            self.move_helper(direction, self.get_grid_height())
+            return self.move_helper(direction, self.get_grid_height())
         elif(direction == DOWN):
-            self.move_helper(direction, self.get_grid_height())
+            return self.move_helper(direction, self.get_grid_height())
         elif(direction == LEFT):
-            self.move_helper(direction, self.get_grid_width())
+            return self.move_helper(direction, self.get_grid_width())
         elif(direction == RIGHT):
-            self.move_helper(direction, self.get_grid_width())
+            return self.move_helper(direction, self.get_grid_width())
      
     def get_possible_moves(self):
         return [x for x in [UP, DOWN, LEFT, RIGHT] if self.check_move(x)]
 
     def move_helper(self, direction, row_or_column):
         # Make a move and add a piece 
-
-        null_move = self.next_pos(direction, row_or_column)
-        if not null_move:
+        move_outcome = self.next_pos(direction, row_or_column)
+        if not move_outcome == None: # Move is an actual, valid move
             self.new_tile()
+
+        return move_outcome
 
     def next_pos(self, direction, row_or_column):
         # Find the next position after making a move. Move all columns and merge
         # Does not include adding a piece
-        # Return True if null move (nothing changed)
+        # @return - None if null move (nothing changed)
+        # else, change in score 
         initial_list = self.initial[direction]
         temporary_list=[]
         
@@ -155,7 +162,7 @@ class TwentyFortyEight:
             for index in temporary_list:
                 indices.append(self.get_tile(index[0], index[1]))
             
-            merged_list = merge(indices)
+            merged_list, score_inc = merge(indices)
             
             for index_x, index_y in zip(merged_list, temporary_list):
                 self.set_tile(index_y[0], index_y[1], index_x)
@@ -165,8 +172,9 @@ class TwentyFortyEight:
         after_move = str(self.cells)
         null_move = before_move == after_move
         
-        return null_move
-         
+        if null_move == True: return None
+        else: return score_inc
+
     def new_tile(self):
         # Create a new tile in a randomly selected empty 
         # square.  The tile should be 2 90% of the time and
