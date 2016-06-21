@@ -27,6 +27,14 @@ def Play(ai):
     print 'Game over. Total score: ', total_score
     return total_score
 
+def Evaluate(ai, numTimes=50):
+    t_score = 0
+    for k in xrange(numTimes):
+        t_score += Play(ai)
+    avg_score = float(t_score)/float(numTimes)
+    print "avg_score: ", avg_score
+    return avg_score
 
 if __name__ == '__main__':
     Play(TwentyFortyEight_ai())
+    Evaluate(TwentyFortyEight_ai())

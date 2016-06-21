@@ -124,3 +124,4 @@ class ActionNode:
    
 if __name__ == '__main__':
     base_ai.Play(TwentyFortyEight_mcts())
+    base_ai.Evaluate(TwentyFortyEight_mcts())
