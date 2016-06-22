@@ -1,8 +1,5 @@
 import base_2048_ai as base_ai
 import TwentyFortyEight as TFE
-import copy
-import random
-import math
 
 class TwentyFortyEight_heuristic(base_ai.TwentyFortyEight_ai):
     """
