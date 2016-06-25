@@ -3,6 +3,7 @@ import TwentyFortyEight as TFE
 import copy
 import random
 import math
+import time
 
 class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
     def __init__(self, Cp = 0.707):
@@ -16,13 +17,17 @@ class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
             print 'No more moves left'
             return None
 
-        return self.mcts(game, 10)    
+        return self.mcts(game, max_traj=100000, max_time=0.2, min_traj = 5)    
+        
 
-    def mcts(self, game, max_traj=100):
+    def mcts(self, game, max_traj=100000, max_time=0.2, min_traj = 5):
+        end_time = time.time() + max_time
         root_state = self.get_root(game)        
-        print root_state.cnt
-
+        # print root_state.cnt
+        
         for rollout_num in xrange(max_traj):
+            if time.time() > end_time and rollout_num > min_traj: 
+                break
             # print "Rollout: " , rollout_num
             selected_state, reward_collected1 = self.tree_policy(root_state)
 
@@ -147,4 +152,4 @@ class ActionNode:
    
 if __name__ == '__main__':
     base_ai.Play(TwentyFortyEight_mcts())
-    base_ai.Evaluate(TwentyFortyEight_mcts(),1)
+    base_ai.Evaluate(TwentyFortyEight_mcts(),5)
