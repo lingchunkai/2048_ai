@@ -2,10 +2,7 @@
 2048 GUI
 """
 
-try:
-    import simplegui
-except ImportError:
-    import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
+import simpleguitk as simplegui
 import math
 
 # Tile Images
@@ -48,6 +45,7 @@ class GUI:
         """
         for dirstr, dirval in self._directions.items():
             if key == simplegui.KEY_MAP[dirstr]:
+                print dirval
                 self._game.move(dirval)
                 break
 

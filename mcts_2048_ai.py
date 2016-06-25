@@ -11,16 +11,16 @@ class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
         self.tree_root_state = None   
         self.Cp = Cp     
 
-    def get_move(self, game):
+    def get_move(self, game, max_traj=100000, max_time=1, min_traj = 5):
         actions = game.get_possible_moves()
         if len(actions) == 0: 
             print 'No more moves left'
             return None
 
-        return self.mcts(game, max_traj=100000, max_time=0.2, min_traj = 5)    
+        return self.mcts(game, max_traj, max_time, min_traj)    
         
 
-    def mcts(self, game, max_traj=100000, max_time=0.2, min_traj = 5):
+    def mcts(self, game, max_traj, max_time, min_traj):
         end_time = time.time() + max_time
         root_state = self.get_root(game)        
         # print root_state.cnt
