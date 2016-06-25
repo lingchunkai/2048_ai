@@ -55,21 +55,24 @@ def merge(line):
 class TwentyFortyEight:
     # Class to run the game logic.
 
+    initial=dict()
+
     def __init__(self, grid_height, grid_width):
         # Initialize class
         self.grid_height = grid_height
         self.grid_width = grid_width
         self.cells = []
         self.reset()
-
-        # Compute inital row dictionary to make move code cleaner
-        self.initial = {
-            UP : [[0,element] for element in range(self.get_grid_width())],
-            DOWN : [[self.get_grid_height() - 1, element] for element in range(self.get_grid_width())],
-            LEFT : [[element, 0] for element in range(self.get_grid_height())],
-            RIGHT : [[element, self.get_grid_width() - 1] for element in range (self.get_grid_height())]
-        }
         
+        # singleton
+        if not (grid_height, grid_width) in TwentyFortyEight.initial:
+            TwentyFortyEight.initial[(grid_height, grid_width)]= {
+                UP : [[0,element] for element in range(self.get_grid_width())],
+                DOWN : [[self.get_grid_height() - 1, element] for element in range(self.get_grid_width())],
+                LEFT : [[element, 0] for element in range(self.get_grid_height())],
+                RIGHT : [[element, self.get_grid_width() - 1] for element in range (self.get_grid_height())]
+            }
+
     def reset(self):
         # Reset the game so the grid is empty.
         self.cells = [[0 for col in range(self.get_grid_height())] for row in range(self.get_grid_width())]
@@ -86,7 +89,6 @@ class TwentyFortyEight:
     def get_grid_width(self):
         # Get the width of the board.
         return self.grid_width
-    
     def get_alive(self):
         # Brute force method to check if any move is available
         nfilled = sum([sum([1 if x > 0 else 0 for x in y]) for y in self.cells])
@@ -146,14 +148,12 @@ class TwentyFortyEight:
         # Does not include adding a piece
         # @return - None if null move (nothing changed)
         # else, change in score 
-        initial_list = self.initial[direction]
+        initial_list = TwentyFortyEight.initial[(self.get_grid_height(), self.get_grid_width())][direction]
         temporary_list=[]
         
         before_move = str(self.cells)
-
         for element in initial_list:
             temporary_list.append(element)
-            
             for index in range(1, row_or_column):
                 temporary_list.append([x + y for x, y in zip(temporary_list[-1], OFFSETS[direction])])
             
