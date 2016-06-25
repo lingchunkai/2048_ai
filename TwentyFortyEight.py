@@ -18,39 +18,67 @@ OFFSETS = {UP: (1, 0),
            LEFT: (0, 1), 
            RIGHT: (0, -1)} 
    
-def merge(line):
+#def merge(line):
     # Helper function that merges a single row or column in 2048
     # Move all non-zero values of list to the left
     # @return: (result after merging, increase in score)
-    nonzeros_removed = []
-    result = []
-    merged = False
-    for number in line:
-        if number != 0:
-            nonzeros_removed.append(number)
+    #nonzeros_removed = []
+    #result = []
+    #merged = False
+    #for number in line:
+    #    if number != 0:
+    #        nonzeros_removed.append(number)
 
-    while len(nonzeros_removed) != len(line):
-        nonzeros_removed.append(0)
-    
+    #while len(nonzeros_removed) != len(line):
+    #    nonzeros_removed.append(0)
+    #
+    #score_inc = 0
+    ## Double sequental tiles if same value
+    #for number in range(0, len(nonzeros_removed) - 1):
+    #    if nonzeros_removed[number] == nonzeros_removed[number + 1] and merged == False:
+    #        result.append(nonzeros_removed[number] * 2)
+    #        merged = True
+    #        score_inc += nonzeros_removed[number] * 2
+    #    elif nonzeros_removed[number] != nonzeros_removed[number + 1] and merged == False:
+    #        result.append(nonzeros_removed[number])
+    #    elif merged == True:
+    #        merged = False
+    #
+    #if nonzeros_removed[-1] != 0 and merged == False:
+    #    result.append(nonzeros_removed[-1])
+
+    #while len(result) != len(nonzeros_removed):
+    #    result.append(0)
+
+    #return result, score_inc
+
+def merge(line):
+    res = [0] * len(line)
+    searching = True # searching for first pair
+    prev = -1
+    cnt = 0
     score_inc = 0
-    # Double sequental tiles if same value
-    for number in range(0, len(nonzeros_removed) - 1):
-        if nonzeros_removed[number] == nonzeros_removed[number + 1] and merged == False:
-            result.append(nonzeros_removed[number] * 2)
-            merged = True
-            score_inc += nonzeros_removed[number] * 2
-        elif nonzeros_removed[number] != nonzeros_removed[number + 1] and merged == False:
-            result.append(nonzeros_removed[number])
-        elif merged == True:
-            merged = False
+    for k in xrange(len(line)):
+        if line[k] == 0: continue
+        if searching == True:
+            searching = False
+            prev = line[k]
+        else:
+            if line[k] == prev:
+                searching = True
+                res[cnt] = prev * 2
+                score_inc += prev * 2
+                prev = -1
+                cnt += 1
+            else: # diff number
+                res[cnt] = prev
+                prev = line[k]
+                cnt += 1
     
-    if nonzeros_removed[-1] != 0 and merged == False:
-        result.append(nonzeros_removed[-1])
-
-    while len(result) != len(nonzeros_removed):
-        result.append(0)
-
-    return result, score_inc
+    if prev >= 0:
+        res[cnt] = prev     
+           
+    return res, score_inc     
 
 class TwentyFortyEight:
     # Class to run the game logic.
