@@ -16,7 +16,7 @@ class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
             print 'No more moves left'
             return None
 
-        return self.mcts(game, 100)    
+        return self.mcts(game, 10)    
 
     def mcts(self, game, max_traj=100):
         root_state = self.get_root(game)        

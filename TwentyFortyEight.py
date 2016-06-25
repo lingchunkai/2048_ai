@@ -18,40 +18,6 @@ OFFSETS = {UP: (1, 0),
            LEFT: (0, 1), 
            RIGHT: (0, -1)} 
    
-#def merge(line):
-    # Helper function that merges a single row or column in 2048
-    # Move all non-zero values of list to the left
-    # @return: (result after merging, increase in score)
-    #nonzeros_removed = []
-    #result = []
-    #merged = False
-    #for number in line:
-    #    if number != 0:
-    #        nonzeros_removed.append(number)
-
-    #while len(nonzeros_removed) != len(line):
-    #    nonzeros_removed.append(0)
-    #
-    #score_inc = 0
-    ## Double sequental tiles if same value
-    #for number in range(0, len(nonzeros_removed) - 1):
-    #    if nonzeros_removed[number] == nonzeros_removed[number + 1] and merged == False:
-    #        result.append(nonzeros_removed[number] * 2)
-    #        merged = True
-    #        score_inc += nonzeros_removed[number] * 2
-    #    elif nonzeros_removed[number] != nonzeros_removed[number + 1] and merged == False:
-    #        result.append(nonzeros_removed[number])
-    #    elif merged == True:
-    #        merged = False
-    #
-    #if nonzeros_removed[-1] != 0 and merged == False:
-    #    result.append(nonzeros_removed[-1])
-
-    #while len(result) != len(nonzeros_removed):
-    #    result.append(0)
-
-    #return result, score_inc
-
 def merge(line):
     res = [0] * len(line)
     searching = True # searching for first pair
@@ -188,29 +154,31 @@ class TwentyFortyEight:
 
         if direction in self.next_pos_cached: return self.next_pos_cached[direction]
         
-        # mod_cells = copy.deepcopy(self.cells)
-        mod_cells = list(map(list, self.cells))
-        initial_list = TwentyFortyEight.initial[(self.get_grid_height(), self.get_grid_width())][direction]
-        temporary_list=[]
-        
+        score_inc = 0
+        mod_cells = list(map(list, self.cells))        
         before_move = str(mod_cells)
-        for element in initial_list:
-            temporary_list.append(element)
-            for index in range(1, row_or_column):
-                temporary_list.append([x + y for x, y in zip(temporary_list[-1], OFFSETS[direction])])
-            
-            indices = []
-            
-            for index in temporary_list:
-                indices.append(mod_cells[index[0]][index[1]])
-            
-            merged_list, score_inc = merge(indices)
-            
-            for index_x, index_y in zip(merged_list, temporary_list):
-                mod_cells[index_y[0]][index_y[1]] = index_x
         
-            temporary_list = []
-        
+        if direction == LEFT:
+            for k in xrange(self.grid_height):
+                mod_cells[k], rwd = merge(mod_cells[k])
+                score_inc += rwd
+        elif direction == RIGHT:
+            for k in xrange(self.grid_height):
+                merged, rwd = merge(mod_cells[k][::-1])
+                mod_cells[k] = list(reversed(merged))
+                score_inc += rwd
+        elif direction == UP:
+            for k in xrange(self.grid_width):
+                merged, rwd = merge([mod_cells[x][k] for x in xrange(self.grid_height)])
+                score_inc += rwd
+                for g in xrange(self.grid_height): mod_cells[g][k] = merged[g]
+        elif direction == DOWN:
+            for k in xrange(self.grid_width):
+                merged, rwd = merge([mod_cells[x][k] for x in reversed(range(self.grid_height))])
+                merged = list(reversed(merged))
+                score_inc += rwd
+                for g in xrange(self.grid_height): mod_cells[g][k] = merged[g]                
+                
         after_move = str(mod_cells)
         null_move = before_move == after_move
         
