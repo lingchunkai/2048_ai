@@ -57,13 +57,16 @@ class TwentyFortyEight:
 
     initial=dict()
 
-    def __init__(self, grid_height, grid_width):
+    def __init__(self, grid_height, grid_width, cells=[]):
         # Initialize class
         self.grid_height = grid_height
         self.grid_width = grid_width
-        self.cells = []
-        self.reset()
-        
+        if len(cells) > 0:
+            self.cells = list(map(list, cells))
+        else:
+            self.reset()
+        self.next_pos_cached = dict()        
+
         # singleton
         if not (grid_height, grid_width) in TwentyFortyEight.initial:
             TwentyFortyEight.initial[(grid_height, grid_width)]= {
@@ -72,6 +75,7 @@ class TwentyFortyEight:
                 LEFT : [[element, 0] for element in range(self.get_grid_height())],
                 RIGHT : [[element, self.get_grid_width() - 1] for element in range (self.get_grid_height())]
             }
+
 
     def reset(self):
         # Reset the game so the grid is empty.
@@ -89,34 +93,18 @@ class TwentyFortyEight:
     def get_grid_width(self):
         # Get the width of the board.
         return self.grid_width
-    def get_alive(self):
-        # Brute force method to check if any move is available
-        nfilled = sum([sum([1 if x > 0 else 0 for x in y]) for y in self.cells])
-        if nfiled < self.grid_width * self.grid_height: return True
-
-        isDead = True
-        for direction in [UP,DOWN,LEFT,RIGHT]:
-            g = copy.deepcopy(self)
-            
-            if g.check_move(direction): 
-                isDead = False
-                continue
-
-        return not isDead
-            
     def check_move(self, direction):
         # Check if moving in that direction is a valid move. True if valid
         # return True if valid
-        g = copy.deepcopy(self)
 
         if(direction == UP):
-            return not g.next_pos(direction, self.get_grid_height()) == None
+            return not self.next_pos(direction, self.get_grid_height()) == None
         elif(direction == DOWN):
-            return not g.next_pos(direction, self.get_grid_height()) == None
+            return not self.next_pos(direction, self.get_grid_height()) == None
         elif(direction == LEFT):
-            return not g.next_pos(direction, self.get_grid_width()) == None
+            return not self.next_pos(direction, self.get_grid_width()) == None
         elif(direction == RIGHT):
-            return not g.next_pos(direction, self.get_grid_width()) == None
+            return not self.next_pos(direction, self.get_grid_width()) == None
      
     def move(self, direction):
         # Move all tiles in the given direction and add
@@ -131,7 +119,17 @@ class TwentyFortyEight:
             return self.move_helper(direction, self.get_grid_width())
         elif(direction == RIGHT):
             return self.move_helper(direction, self.get_grid_width())
-     
+    
+    def move_cpy(self, direction):
+        if(direction == UP):
+            return self.move_helper_cpy(direction, self.get_grid_height())
+        elif(direction == DOWN):
+            return self.move_helper_cpy(direction, self.get_grid_height())
+        elif(direction == LEFT):
+            return self.move_helper_cpy(direction, self.get_grid_width())
+        elif(direction == RIGHT):
+            return self.move_helper_cpy(direction, self.get_grid_width())
+        
     def get_possible_moves(self):
         return [x for x in [UP, DOWN, LEFT, RIGHT] if self.check_move(x)]
 
@@ -139,19 +137,35 @@ class TwentyFortyEight:
         # Make a move and add a piece 
         move_outcome = self.next_pos(direction, row_or_column)
         if not move_outcome == None: # Move is an actual, valid move
+            self.cells = move_outcome[0]
             self.new_tile()
+            self.next_pos_cached = dict()
+            return move_outcome[1]
+        else: return None
 
-        return move_outcome
+    def move_helper_cpy(self, direction, row_or_column):
+        # Makes a new board and a move on it
+        move_outcome = self.next_pos(direction, row_or_column)
+        if not move_outcome == None: # Move is an actual, valid move
+            ret = TwentyFortyEight(self.grid_height, self.grid_width, move_outcome[0])
+            ret.new_tile()
+        else: return None
+        return ret, move_outcome[1]
 
     def next_pos(self, direction, row_or_column):
         # Find the next position after making a move. Move all columns and merge
         # Does not include adding a piece
-        # @return - None if null move (nothing changed)
-        # else, change in score 
+        # @return next_cells, reward
+        # None if invalid move
+
+        if direction in self.next_pos_cached: return self.next_pos_cached[direction]
+        
+        # mod_cells = copy.deepcopy(self.cells)
+        mod_cells = list(map(list, self.cells))
         initial_list = TwentyFortyEight.initial[(self.get_grid_height(), self.get_grid_width())][direction]
         temporary_list=[]
         
-        before_move = str(self.cells)
+        before_move = str(mod_cells)
         for element in initial_list:
             temporary_list.append(element)
             for index in range(1, row_or_column):
@@ -160,20 +174,23 @@ class TwentyFortyEight:
             indices = []
             
             for index in temporary_list:
-                indices.append(self.get_tile(index[0], index[1]))
+                indices.append(mod_cells[index[0]][index[1]])
             
             merged_list, score_inc = merge(indices)
             
             for index_x, index_y in zip(merged_list, temporary_list):
-                self.set_tile(index_y[0], index_y[1], index_x)
+                mod_cells[index_y[0]][index_y[1]] = index_x
         
             temporary_list = []
         
-        after_move = str(self.cells)
+        after_move = str(mod_cells)
         null_move = before_move == after_move
         
-        if null_move == True: return None
-        else: return score_inc
+        if null_move == True: 
+            self.next_pos_cached[direction] = None
+        else: 
+            self.next_pos_cached[direction] = (mod_cells, score_inc)
+        return self.next_pos_cached[direction]
 
     def new_tile(self):
         # Create a new tile in a randomly selected empty 

@@ -7,7 +7,7 @@ import math
 class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
     def __init__(self, Cp = 0.707):
         base_ai.TwentyFortyEight_ai.__init__(self)
-        tree_root_state = None   
+        self.tree_root_state = None   
         self.Cp = Cp     
 
     def get_move(self, game):
@@ -15,12 +15,13 @@ class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
         if len(actions) == 0: 
             print 'No more moves left'
             return None
-    
+
         return self.mcts(game, 100)    
 
     def mcts(self, game, max_traj=100):
-        root_state = StateNode(copy.deepcopy(game), None)
-        
+        root_state = self.get_root(game)        
+        print root_state.cnt
+
         for rollout_num in xrange(max_traj):
             # print "Rollout: " , rollout_num
             selected_state, reward_collected1 = self.tree_policy(root_state)
@@ -35,6 +36,27 @@ class TwentyFortyEight_mcts(base_ai.TwentyFortyEight_ai):
             # raw_input()
 
         return self.best_child(root_state, 0)
+
+    def get_root(self, game):
+        """
+        Find partially constructed tree if there already is, using brute force
+        """
+
+        if self.tree_root_state == None:
+            self.tree_root_state = StateNode(copy.deepcopy(game), None)
+            return self.tree_root_state
+        else:
+            hashkey_needle = tuple([tuple(x) for x in game.cells])
+            # Search for next state
+            for action, action_node in self.tree_root_state.children.iteritems():
+                for hashkey in action_node.children:
+                    if hashkey == hashkey_needle:
+                        self.tree_root_state = action_node.children[hashkey]
+                        self.tree_root_state.parent = None
+                        return self.tree_root_state
+                        
+        self.tree_root_state = StateNode(copy.deepcopy(game), None)
+        return self.tree_root_state
 
     def tree_policy(self, init_state):
         reward_collected = 0
@@ -111,8 +133,9 @@ class ActionNode:
         self.val = 0
 
     def sample_state(self):
-        newgame = copy.deepcopy(self.game)
-        rwd = newgame.move(self.action) 
+        #newgame = copy.deepcopy(self.game)
+        #rwd = newgame.move(self.action) 
+        newgame, rwd = self.game.move_cpy(self.action)
         rwd = float(rwd)/2048.0
         # print newgame.cells
         
@@ -124,4 +147,4 @@ class ActionNode:
    
 if __name__ == '__main__':
     base_ai.Play(TwentyFortyEight_mcts())
-    base_ai.Evaluate(TwentyFortyEight_mcts())
+    base_ai.Evaluate(TwentyFortyEight_mcts(),1)
